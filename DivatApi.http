@@ -1,0 +1,6 @@
+@DivatApi_HostAddress = http://localhost:5122
+
+GET {{DivatApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
