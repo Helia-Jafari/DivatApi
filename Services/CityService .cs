@@ -1,30 +1,57 @@
-﻿using DivatApi.Models;
-using DivatApi.Interfaces;
+﻿using DivatApi.Interfaces;
+using DivatApi.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace DivatApi.Services
 {
     public class CityService : ICityService
     {
         private readonly DivarContext _context;
-        private readonly IMemoryCache _cache;
+        //private readonly IDistributedCache _cache;
 
-        public CityService(DivarContext context, IMemoryCache memoryCache)
+        public CityService(DivarContext context)
         {
             _context = context;
-            _cache = memoryCache;
+            //_cache = memoryCache;
         }
 
-        public async Task<City> GetCityByIdAsync(int cityId)
-        {
-            const string cacheKey = "city";
-            if (!_cache.TryGetValue(cacheKey, out City city))
-            {
-                city = await _context.Cities.FirstOrDefaultAsync(city => city.Id == cityId);
-                _cache.Set(cacheKey, city, TimeSpan.FromMinutes(10)); // مدت زمان کشینگ
-            }
-            return city;
-        }
+        //public async Task<City> GetCityByIdAsync(int cityId)
+        //{
+            //const string cacheKey = "city";
+            //if (!_cache.TryGetValue(cacheKey, out City city))
+            //{
+            //    city = await _context.Cities.FirstOrDefaultAsync(city => city.Id == cityId);
+            //    _cache.Set(cacheKey, city, TimeSpan.FromMinutes(10)); // مدت زمان کشینگ
+            //}
+            //return city;
+
+        //    string cacheKey = $"city{cityId}";
+        //    var cachedData = await _cache.GetStringAsync(cacheKey);
+        //    if (cachedData.IsNullOrEmpty())
+        //    {
+        //        var city = await _context.Cities.FirstOrDefaultAsync(city => city.Id == cityId);
+        //        var serializedCity = JsonSerializer.Serialize(city, new JsonSerializerOptions
+        //        {
+        //            ReferenceHandler = ReferenceHandler.Preserve,
+        //            WriteIndented = true
+        //        }); ;
+        //        await _cache.SetStringAsync(cacheKey, serializedCity, new DistributedCacheEntryOptions
+        //        {
+        //            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+        //        });
+        //        return city;
+        //    }
+        //    var cachedCity = JsonSerializer.Deserialize<City>(cachedData, new JsonSerializerOptions
+        //    {
+        //        ReferenceHandler = ReferenceHandler.Preserve
+        //    });
+        //    ;
+        //    return cachedCity;
+        //}
     }
 }

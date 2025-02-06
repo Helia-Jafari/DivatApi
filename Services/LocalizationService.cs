@@ -12,10 +12,10 @@ namespace DivatApi.Services
     {
         //private readonly IStringLocalizer<HomeController> _localizer;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public LocalizationService(IStringLocalizer<HomeController> localizer, IHttpContextAccessor httpContextAccessor)
+        public LocalizationService( IHttpContextAccessor httpContextAccessor)
         {
 
-            _localizer = localizer;
+            //_localizer = localizer;
             _httpContextAccessor = httpContextAccessor;
         }
         public string GetLocalizedDir()
@@ -41,10 +41,10 @@ namespace DivatApi.Services
             }
         }
 
-        public string GetLocalizedString(string key)
-        {
-            return _localizer[key];
-        }
+        //public string GetLocalizedString(string key)
+        //{
+            //return _localizer[key];
+        //}
 
         public string ChangeCultureInfo(string culture)
         {

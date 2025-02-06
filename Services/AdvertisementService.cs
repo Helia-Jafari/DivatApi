@@ -4,6 +4,10 @@ using DivatApi.Mapper;
 using DivatApi.Repositories;
 using DivatApi.Dtos;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace DivatApi.Services
 {
@@ -14,9 +18,12 @@ namespace DivatApi.Services
 
         private readonly ISearchSpecification<Advertisement> _AdvertisementSearchSpecificationService;
 
+        private readonly IMemoryCache _memoryCache;
+        private readonly IDistributedCache _distributedCache;
+
         //private readonly AdvertisementMapper _advertisementMapper;
 
-        public AdvertisementService(DivarContext context, IGenericRepository<Advertisement> advertisementRepository, ISearchSpecification<Advertisement> AdvertisementSearchSpecificationService)
+        public AdvertisementService(IDistributedCache distributedCache,IMemoryCache memoryCache,DivarContext context, IGenericRepository<Advertisement> advertisementRepository, ISearchSpecification<Advertisement> AdvertisementSearchSpecificationService)
         {
             _context = context;
             _advertisementRepository = advertisementRepository;
@@ -24,6 +31,9 @@ namespace DivatApi.Services
             //_advertisementMapper = advertisementMapper;
 
             _AdvertisementSearchSpecificationService = AdvertisementSearchSpecificationService;
+
+            _memoryCache = memoryCache;
+            _distributedCache = distributedCache;
         }
 
 
@@ -50,6 +60,12 @@ namespace DivatApi.Services
             var ads = await _advertisementRepository.GetAllAsync();
             ads.ToList().ForEach(c => VMs.Add(AdvertisementMapper.MapAdvertisementToHomeDto(c)));
             return VMs;
+        }
+
+        public async Task<IEnumerable<Advertisement>> GetAllAdvertisementsAsync()
+        {
+            var ads = await _advertisementRepository.GetAllAsync();
+            return ads;
         }
         public async Task<IEnumerable<AdvertisementDetailsDto>> GetAllAdvertisementsAsyncHomeDetailsVM()
         {
@@ -228,7 +244,53 @@ namespace DivatApi.Services
             decimal price;
             bool isDigit = decimal.TryParse(SearchString, out price);
         }
+        public async Task<List<Category>> GetBreadcrumbsAsync(int adId)
+        {
+            string cacheKey = $"breadcrumbs_{adId}";
+            if (!_memoryCache.TryGetValue(cacheKey, out List<Category> categories))
+            {
+                categories = new List<Category>();
+                Advertisement ad = await _advertisementRepository.GetByIdAsync(adId);
+                Category category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == ad.CategoryId);
+                categories.Add(category);
+                while (category.ParentId != null)
+                {
+                    category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == category.ParentId);
+                    categories.Add(category);
+                }
+                _memoryCache.Set(cacheKey, categories, TimeSpan.FromMinutes(10)); // مدت زمان کشینگ
+            }
+            return categories;
 
+        }
+
+        public async Task<City> GetCityByIdAsync(int adId)
+        {
+
+            string cacheKey = $"city{adId}";
+            var cachedData = await _distributedCache.GetStringAsync(cacheKey);
+            if (cachedData==null)
+            {
+                Advertisement ad = await _advertisementRepository.GetByIdAsync(adId);
+                var city = await _context.Cities.FirstOrDefaultAsync(city => city.Id == ad.CityId);
+                var serializedCity = JsonSerializer.Serialize(city, new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.Preserve,
+                    WriteIndented = true
+                }); ;
+                await _distributedCache.SetStringAsync(cacheKey, serializedCity, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                });
+                return city;
+            }
+            var cachedCity = JsonSerializer.Deserialize<City>(cachedData, new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.Preserve
+            });
+            ;
+            return cachedCity;
+        }
         //public async Task<Advertisement> CreateAdvertisementAsync(Advertisement model)
         //{
         //    model.Status = "Active";

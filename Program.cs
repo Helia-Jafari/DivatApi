@@ -24,13 +24,31 @@ namespace DivatApi
             builder.Services.AddDbContext<DivarContext>();
 
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-            builder.Services.AddScoped<ILocalizationService, LocalizationService>();
+            //builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
             builder.Services.AddScoped<IAdvertisementService, AdvertisementService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<ICityService, CityService>();
             builder.Services.AddScoped<ISearchSpecification<Advertisement>, AdvertisementSearchSpecificationService>();
 
-            builder.Services.AddControllers();
+            //builder.Services.AddDistributedMemoryCache(options =>
+            //{
+            //    options.Configuration = "localhost:6379"; // ???? Redis Server (?? ???? ?????)
+            //    options.InstanceName = "InventoryCache_";  // ?????? ??????? ??
+            //}               );
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = "127.0.0.1:6379"; // ???? Redis Server
+                options.InstanceName = "Sample";  // ?????? ??????? ??
+            });
+
+            builder.Services.AddMemoryCache();
+
+            builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    });
+
 
             builder.Services.AddEndpointsApiExplorer();
             //builder.Services.adds

@@ -4,6 +4,6 @@ namespace DivatApi.Interfaces
 {
     public interface ICityService
     {
-        Task<City> GetCityByIdAsync(int cityId);
+        //Task<City> GetCityByIdAsync(int cityId);
     }
 }
