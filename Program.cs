@@ -2,12 +2,16 @@ using DivatApi.Interfaces;
 using DivatApi.Models;
 using DivatApi.Repositories;
 using DivatApi.Services;
+using Microsoft.AspNetCore.Mvc.Versioning;
+//using Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using System.Globalization;
 
@@ -41,6 +45,7 @@ namespace DivatApi
                 options.InstanceName = "Sample";  // ?????? ??????? ??
             });
 
+
             builder.Services.AddMemoryCache();
 
             builder.Services.AddControllers()
@@ -53,7 +58,53 @@ namespace DivatApi
             builder.Services.AddEndpointsApiExplorer();
             //builder.Services.adds
 
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "DivatApi", Version = "1.0" });
+            });
+
+
+            //builder.Services.AddVersionedApiExplorer(options =>
+            //{
+            //    options.GroupNameFormat = "'v'VVV"; // ????? ???? ????
+            //    options.SubstituteApiVersionInUrl = true; // ???????? ???? ?? URL
+            //});
+            //builder.Services.AddApiVersioning(options =>
+            //{
+            //    options.ReportApiVersions = true;
+            //    options.AssumeDefaultVersionWhenUnspecified = true;
+            //    options.DefaultApiVersion = new ApiVersion(2, 0);
+            //});
+
+            //builder.Services.AddEndpointsApiExplorer();
+            //builder.Services.AddVersionedApiExplorer(options =>
+            //{
+            //    options.GroupNameFormat = "'v'VVV";
+            //    options.SubstituteApiVersionInUrl = true;
+            //});
+            builder.Services.AddApiVersioning(options =>
+            {
+                options.ReportApiVersions = true;
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.DefaultApiVersion = new ApiVersion(1, 0); // ?? ???? ???? ??? ???
+            });
+
+            builder.Services.AddVersionedApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV"; // ????? ???? ?????????
+                options.SubstituteApiVersionInUrl = true; // ???????? ???? ?? URL
+            });
+
+
+
+
+            //builder.Services.AddApiVersioning(options =>
+            //{
+            //    options.ReportApiVersions = true; // ????? ???????? ????? ?? ??? ????
+            //    options.AssumeDefaultVersionWhenUnspecified = true; // ??? ???? ???? ???? ????? ??????? ?? ?????? ???
+            //    options.DefaultApiVersion = new ApiVersion(2, 0); // ???? ???????
+            //});
+
 
             builder.Services.AddLocalization(options => options.ResourcesPath = "Localization");
             var supportedCultures = new[]

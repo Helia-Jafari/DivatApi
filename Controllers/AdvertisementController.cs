@@ -16,7 +16,10 @@ using System.Globalization;
 namespace DivatApi.Controllers
 {
     [Route("api/[controller]")]
+    //[Route("api/v{version:ApiVersion}/[controller]")]
+
     [ApiController]
+    //[ApiVersion("2.0")]
     public class AdvertisementController : ControllerBase
     {
         private readonly DivarContext _context;
@@ -47,6 +50,7 @@ namespace DivatApi.Controllers
         }
 
         [HttpGet("GetAllAdvertisements")]
+        //[ApiVersion("2.0")]
         public async Task<IActionResult> GetAllAdvertisements()
         {
             var advertisements = await _advertisementService.GetAllAdvertisementsAsync();
